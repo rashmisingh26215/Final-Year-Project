@@ -1,0 +1,285 @@
+from textblob import TextBlob
+from wordcloud import WordCloud,STOPWORDS
+import pandas as pd
+import re
+#from array import*
+import streamlit as st
+from PIL import Image
+import  streamlit_toggle as tog
+import seaborn as sns
+import matplotlib.pyplot as plt
+import numpy as np
+import time
+import base64
+
+
+
+
+
+#reading treanding data
+df_treanding= pd.read_csv("D:\projectchandru\TrendingTweets.csv")
+
+#Code for toggle with popup
+with st.sidebar:
+ toggle=tog.st_toggle_switch(False)  
+if toggle:
+    with st.spinner("Expert mode on"):
+      time.sleep(2)
+else:
+    with st.spinner("Normal mode on "):
+     time.sleep(2)
+
+#background color of sidebar
+@st.cache_data
+def get_img_as_base64(file):
+    with open(file, "rb") as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
+img = get_img_as_base64("D:/projectchandru/wallpaper.png")
+
+if toggle:
+    page_bg_img = f"""
+    <style>
+    [data-testid="stSidebar"] > div:first-child {{
+        background-image: url("data:image/png;base64,{img}");
+        background-size: center;
+    }}
+    </style>
+    """
+    st.markdown(page_bg_img, unsafe_allow_html=True)
+
+
+
+
+#taking input for search twittes
+tw_search = st.sidebar.text_input(
+    "Search", value="",type="default",
+    placeholder= "Search Twitter",
+    disabled=False, label_visibility="visible")
+
+# Showing treanding data
+st.sidebar.write(df_treanding.head(20)[['Trending_Tweets','Volume']])   
+
+# Searching accoding to the search box
+if(tw_search == 'गीता प्रेस'):
+    df_data= pd.read_csv("D:/projectchandru/गीता प्रेस.csv")
+    df_data.columns=['Tweets']
+elif(tw_search == '#NothingPhone2'):
+   df_data= pd.read_csv("D:/projectchandru/#NothingPhone2.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#AtikAhmed'):
+   df_data= pd.read_csv("D:/projectchandru/#AtikAhmed.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#KarnatakaAssemblyElection'):
+   df_data= pd.read_csv("D:/projectchandru/#KarnatakaAssemblyElection.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#KarnatakaElections2023'):
+   df_data= pd.read_csv("D:/projectchandru/#KarnatakaElections2023.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#DeepikaPadukone'):
+   df_data= pd.read_csv("D:/projectchandru/#DeepikaPadukone.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#ArtificialIntelligence'):
+   df_data= pd.read_csv("D:/projectchandru/#ArtificialIntelligence.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#MumbaiIndians'):
+   df_data= pd.read_csv("D:/projectchandru/#MumbaiIndians.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == 'Admin'):
+   df_data= pd.read_csv("D:/projectchandru/Admin.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#दिल्ली_पुलिस_शर्म_करो'):
+   df_data= pd.read_csv("D:/projectchandru/#दिल्ली_पुलिस_शर्म_करो.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#RIPManobala'):
+   df_data= pd.read_csv("D:/projectchandru/#RIPManobala.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == 'Congratulations India'):
+   df_data= pd.read_csv("D:/projectchandru/Congratulations India.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#JantarMantar'):
+   df_data= pd.read_csv("D:/projectchandru/#JantarMantar.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#Real_Facts_About_Buddhism'):
+   df_data= pd.read_csv("D:/projectchandru/#Real_Facts_About_Buddhism.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == 'Sushant Singh Rajput'):
+   df_data= pd.read_csv("D:/projectchandru/#Sushant Singh Rajput.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#MannKiBaat100'):
+   df_data= pd.read_csv("D:/projectchandru/#MannKiBaat100.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#CGL19marks'):
+   df_data= pd.read_csv("D:/projectchandru/#CGL19marks.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#FarmarsProtest'):
+   df_data= pd.read_csv("D:/projectchandru/#FarmarsProtest.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#PUBG'):
+   df_data= pd.read_csv("D:/projectchandru/#PUBG.csv")
+   df_data.columns=['Tweets']
+elif(tw_search == '#OBC_आरक्षण_बचाओ'):
+   df_data= pd.read_csv("D:/projectchandru/#OBC_आरक्षण_बचाओ.csv")
+   df_data.columns=['Tweets']
+
+
+#Using Streamlit for Visualization
+
+if toggle:
+    page = None
+else:
+    page = st.sidebar.selectbox("Choose a page", ["Bar Graph", "Line Graph", "WordCloud"])
+
+st.write("""
+  # Sentiment Analysis on Tweets ...
+  Analyse the Positive and Negative Tweets!
+  """)
+
+
+
+#Creating function to clean tweets
+def cleanTxt(text):
+    text=re.sub(r'@[A-Za-z0-9]+','',text)
+    text=re.sub(r'#','',text)
+    text=re.sub(r'RT[\s]+','',text)
+    text=re.sub(r'https?:\/\/\S+','',text)
+    text=re.sub(r':','',text)
+    return text
+df_data['Tweets']=df_data['Tweets'].apply(cleanTxt)
+
+st.subheader('Some of the extracted Tweets')
+st.write(df_data)
+
+def getSubjectivity(text):
+    return TextBlob(text).sentiment.subjectivity
+def getPolarity(text):
+    return TextBlob(text).sentiment.polarity
+
+if toggle:
+  st.subheader(" ")
+  def app():
+    st.subheader('Word Cloud for Mostly used hashtags in Tweets')
+    stopwords=set(STOPWORDS) #words that are not necessary for wordcloud
+    mask=np.array(Image.open("D:/projectchandru/Twitter.png"))  #use twitter image as a mask to display text
+    text = " ".join(tweet for tweet in df_data['Tweets']) # concatenate all tweets into a single string
+    wordcloud = WordCloud(stopwords=stopwords, width=300, height=100, mask=mask, background_color="Black", colormap="Set2",contour_width=3, contour_color='steelblue').generate(text)
+    fig, ax = plt.subplots(figsize=(20,10),facecolor='k')
+    ax.imshow(wordcloud,interpolation='bilinear')
+    ax.axis('off')
+    plt.tight_layout(pad=0)
+    st.pyplot(fig)
+  if __name__ == '__main__':
+    app()
+
+
+
+#Adding two new columns in Dataframe named Subjectivity and Polarity
+df_data['Subjectivity']=df_data['Tweets'].apply(getSubjectivity)
+df_data['Polarity']=df_data['Tweets'].apply(getPolarity)
+st.subheader('DataFrame with new columns as Subjectivity and Polarity')
+st.write(df_data)
+
+#First chart plot
+if toggle:
+    st.subheader(" ")
+    st.subheader("Relation Ploting of Subjectivity and Polarity")
+    pairgrid = sns.PairGrid(data=df_data[['Polarity', 'Subjectivity']],palette='hls')
+    pairgrid.map_upper(sns.scatterplot)
+    pairgrid.map_lower(sns.scatterplot)
+    pairgrid.map_diag(sns.kdeplot)
+    st.pyplot(pairgrid)
+
+#Creating function to get positive, negative or neutral values
+def getAnalysis(score):
+    if score < 0:
+        return 'Negative'
+    elif score==0:
+        return 'Neutral'
+    else:
+        return 'Positive'
+
+#Adding analysis column into dataframe
+df_data['Analysis']=df_data['Polarity'].apply(getAnalysis)
+st.subheader('DataFrame after calculating Sentiments on tweets')
+st.write(df_data)
+
+#Second chart plot
+if toggle:
+  st.subheader(" ")
+  st.subheader("Pair Ploting for Sentiments of tweets")
+  payplot=sns.pairplot(df_data,hue="Analysis")
+  st.pyplot(payplot)
+
+#Sorting dataframe by polarity to see most Negative tweet
+sortedDF=df_data.sort_values(by=['Polarity'])
+st.subheader('Most Negative Tweets')
+st.write(sortedDF.head())
+
+
+
+#Getting percentage of negative tweets
+ntweets=df_data[df_data.Analysis=='Negative']
+ntweets=ntweets['Tweets']
+neg=round((ntweets.shape[0]/df_data.shape[0]*100),1)
+st.subheader('Getting Percentage of calculated sentiments of tweets')
+st.write('Negative Tweets(%): ')
+st.write(neg)
+
+#Getting percentage of positive tweets
+ptweets=df_data[df_data.Analysis=='Positive']
+ptweets=ptweets['Tweets']
+pos=round((ptweets.shape[0]/df_data.shape[0]*100),1)
+st.write('Positive Tweets(%): ')
+st.write(pos)
+
+#Getting percentage of neutral tweets
+netweets=df_data[df_data.Analysis=='Neutral']
+netweets=netweets['Tweets']
+neu=round((netweets.shape[0]/df_data.shape[0]*100),1)
+st.write('Neutral Tweets(%): ')
+st.write(neu)
+
+#Third chart plot
+st.subheader(" ")
+st.subheader("Joint plotting for Sentiments of tweets")
+if toggle:
+    joinplot=sns.jointplot(x = 'Subjectivity', 
+           y = 'Polarity',
+           hue='Analysis',
+           data = df_data
+    )
+    st.pyplot(joinplot)
+
+#Forth chart plot
+if toggle:
+    st.subheader(" ")
+    st.subheader("Relational plotting for sentiment of tweets ")
+    relplot=sns.relplot(
+        data=df_data, x="Subjectivity", y="Polarity", col="Analysis",
+        hue="Analysis", style="Analysis", kind="line",
+    )
+    st.pyplot(relplot)
+if toggle:
+   st.subheader(" ")
+   st.subheader("Line plotting for sentiment of tweets")
+   fig6=sns.lmplot(x = 'Subjectivity', 
+           y = 'Polarity',
+           hue = 'Analysis',
+           data = df_data
+   )
+   st.pyplot(fig6)
+
+
+#Sidebar
+if page=="Bar Graph":
+    st.subheader('Bar Graph')
+    st.bar_chart(df_data['Analysis'].value_counts())
+elif page=="Line Graph":
+    st.subheader('Line Graph')
+    st.line_chart(df_data['Analysis'].value_counts())
+elif page=="WordCloud":
+    st.subheader('Word Cloud for Mostly used hashtags in Tweets')
+    allWords=''.join([twts for twts in df_data['Tweets']])
+    wordCloud=WordCloud(width=750,height=510,random_state=20,max_font_size=119).generate(allWords)
+    st.image(wordCloud.to_array())
